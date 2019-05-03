@@ -1,6 +1,6 @@
 CC      := gcc
-CCFLAGS += -I$(realpath common) -DGHS_FEE_COLLECT -Xprologue_epilogue_hooks_noinline -G
-LDFLAGS += -L$(realpath common) -lm -lmulti -lghseagle
+CCFLAGS += -I$(realpath common) -g
+LDFLAGS += -L$(realpath common) -lm
 
 ifdef REPLAY
 	CCFLAGS := -DREPLAY -DTARGET_LINUX $(CCFLAGS)

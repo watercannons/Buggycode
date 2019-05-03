@@ -576,7 +576,7 @@ void processMiss(Shooter* shooter)
          }
       return;
       case SCATTER:
-      case RE_TARG:
+      case RE_TARG:return;
    }
 }
 

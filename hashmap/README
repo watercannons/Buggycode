@@ -1,0 +1,10 @@
+Buggy Multi-thread Hash Table
+
+There was a problem with a thread safe hash table. The person who found the bug (John) created a bit of test code.
+Tabledemo.cpp is the driver for the multi threaded hash table which John used to recreate the bug. John said that
+sometimes the assert statements in the driver code fail but not on every run. It will look something like 
+```
+	hashTest: tabledemo.cpp:111: void* workerThread(void*): Assertion `temp!=""' failed.
+	Aborted (core dumped)
+```
+Good luck debugging the code!

@@ -1,0 +1,254 @@
+configure AllowExecutionInBpCommand true
+
+//b main { replay_show_screen = 0; $replay_initialized = 1; d main }
+//b check_operation#10 { $replay_at_end = 1; clear; operation_num; ipc_num; checkpoint_num; print "Reached end of replay file!" }
+//b check_operation_target#20 { $replay_at_end = 1; clear; operation_num; ipc_num; checkpoint_num; print "Error in replay!" }
+//b check_operation_size#18 { $replay_at_end = 1; clear; operation_num; ipc_num; checkpoint_num; print "Error in replay!" }
+//b check_operation_contents#23 { clear; operation_num; ipc_num; checkpoint_num; print "Write content differs!" }
+
+define rgoto(operation) {
+  if ($replay_initialized == 0) {
+    r;
+        wait;
+        $replay_initialized = 1;
+  }
+
+  if (operation <= 0) {
+    return rgoto(1);
+  }
+
+  b replay_machine_halt { Tog on; E +; E +; E +; d replay_machine_halt; $in_operation = 1;
+                          clear; operation_num; ipc_num; checkpoint_num }
+  b replay_machine_halt#2 { $in_operation = 0; d replay_machine_halt#2; cU; wait; cU; wait; cU; wait;
+                            clear; operation_num; ipc_num; checkpoint_num }
+  
+  if (operation <= operation_num) {
+        $replay_at_end = 0
+
+    Tog off;
+        $replay_temp = operation;
+        
+    b log_and_restore_arguments {
+          stop_at_operation = $replay_temp;
+          replay_show_screen = 0;
+          d log_and_restore_arguments;
+          c;
+        };
+        
+    tog on replay_machine_halt;
+        tog on check_operation#10;
+    r;
+  } else {
+    if ($replay_at_end == 0) {
+      stop_at_operation = operation;
+          Tog off;
+          tog on replay_machine_halt;
+          tog on check_operation#10;
+          c;
+        }
+  }
+}
+
+define rigoto(ipc) {
+  if ($replay_initialized == 0) {
+    r;
+        wait;
+        $replay_initialized = 1;
+  }
+
+  if (ipc <= 0) {
+    return rigoto(1);
+  }
+
+  b replay_machine_halt { Tog on; E +; E +; E+; d replay_machine_halt; $in_ioperation = 1;
+                          clear; operation_num; ipc_num; checkpoint_num }
+  b replay_machine_halt#2 { $in_ioperation = 0; d replay_machine_halt#2; cU; wait; cU; wait; cU; wait;
+                            clear; operation_num; ipc_num; checkpoint_num }
+  
+  if (ipc <= ipc_num) {
+        $replay_at_end = 0
+
+    Tog off;
+        $replay_temp = ipc;
+        
+    b log_and_restore_arguments {
+          stop_at_ipc = $replay_temp;
+          replay_show_screen = 0;
+          d log_and_restore_arguments;
+          c;
+        };
+        
+    tog on replay_machine_halt;
+        tog on check_operation#10;
+    r;
+  } else {
+    if ($replay_at_end == 0) {
+      stop_at_ipc = ipc;
+          Tog off;
+          tog on replay_machine_halt;
+          tog on check_operation#10;
+          c;
+        }
+  }
+}
+
+define rlgoto(log) {
+  if ($replay_initialized == 0) {
+    r;
+        wait;
+        $replay_initialized = 1;
+  }
+
+  if (log <= 0) {
+    return rlgoto(1);
+  }
+
+  b replay_machine_halt { Tog on; cU; wait; cU; wait; cU; wait; cU; wait; d replay_machine_halt;
+                          clear; operation_num; ipc_num; checkpoint_num }
+  
+  if (log <= log_num) {
+        $replay_at_end = 0
+
+    Tog off;
+        $replay_temp = log;
+        
+    b log_and_restore_arguments {
+          stop_at_log = $replay_temp;
+          replay_show_screen = 0;
+          d log_and_restore_arguments;
+          c;
+        };
+        
+    tog on replay_machine_halt;
+        tog on check_operation#10;
+    r;
+  } else {
+    if ($replay_at_end == 0) {
+      stop_at_log = log;
+          Tog off;
+          tog on replay_machine_halt;
+          tog on check_operation#10;
+          c;
+        }
+  }
+}
+
+define rcgoto(checkpoint) {
+  if ($replay_initialized == 0) {
+    r;
+        wait;
+        $replay_initialized = 1;
+  }
+
+  if (checkpoint <= 0) {
+    return rcgoto(1);
+  }
+
+  b replay_machine_halt { Tog on; E +; E +; d replay_machine_halt; $in_coperation = 1;
+                          clear; operation_num; ipc_num; checkpoint_num }
+  b replay_machine_halt#2 { $in_coperation = 0; d replay_machine_halt#2; cU; wait; cU; wait;
+                            clear; operation_num; ipc_num; checkpoint_num }                        
+
+  if (checkpoint <= checkpoint_num) {
+    $replay_at_end = 0;
+        
+        Tog off;
+        $replay_temp = checkpoint;
+
+        b log_and_restore_arguments {
+          stop_at_checkpoint = $replay_temp;
+          replay_show_screen = 0;
+          d log_and_restore_arguments;
+          c;
+        };
+
+    tog on replay_machine_halt;
+        tog on check_operation#10;
+        r;
+  } else {
+    if ($replay_at_end == 0) {
+          stop_at_checkpoint = checkpoint;
+          Tog off;
+          tog on replay_machine_halt;
+          tog on check_operation#10;
+          c;
+        }
+  }
+}
+
+define rpgoto_num(pegmessage) {
+  if ($replay_initialized == 0) {
+    r;
+    wait;
+    $replay_initialized = 1;
+  }
+
+  if (pegmessage <= 0) {
+    return rpgoto(1);
+  }
+
+  b replay_machine_halt { Tog on; cU; wait; cU; wait; cU; wait; d replay_machine_halt;
+                          clear; operation_num; ipc_num; checkpoint_num }
+
+  if (pegmessage <= pegmessage_num) {
+    $replay_at_end = 0;
+        
+        Tog off;
+        $replay_temp = pegmessage;
+
+        b log_and_restore_arguments {
+          stop_at_pegmessage = $replay_temp;
+          replay_show_screen = 0;
+          d log_and_restore_arguments;
+          c;
+        };
+
+    tog on replay_machine_halt;
+        tog on check_operation#10;
+        r;
+  } else {
+    if ($replay_at_end == 0) {
+          stop_at_pegmessage = pegmessage;
+          Tog off;
+          tog on replay_machine_halt;
+          tog on check_operation#10;
+          c;
+        }
+  }
+}
+
+define rpgoto(pegmessage) {
+  if (sizeof(pegmessage) == sizeof(void *)) {
+    rpgoto_num(pegmessage->replaySourceID);
+  } else {
+    rpgoto_num(pegmessage.replaySourceID);
+  }
+}
+
+debugbutton "Replay Back Checkpoint" c="if ($in_coperation) { rcgoto(checkpoint_num - 1); } else { rcgoto(checkpoint_num); }" i=return_rev_blue16
+debugbutton "Replay Back IPC" c="if ($in_ioperation) { rigoto(ipc_num - 1); } else { rigoto(ipc_num); }" i=go_rev_blue16
+debugbutton "Replay Back 1" c="if ($in_operation || $replay_at_end) { rgoto(operation_num - 1); } else { rgoto(operation_num); }" i=next_rev_blue16
+debugbutton "Replay Forward 1" c="rgoto(operation_num + 1)" i=next_blue16
+debugbutton "Replay Forward IPC" c="rigoto(ipc_num + 1)" i=go_blue16
+debugbutton "Replay Forward Checkpoint" c="rcgoto(checkpoint_num + 1)" i=return_blue16
+debugbutton "Show Screen" c="replay_show_screen = 1; replay_create_screen()" i=function_profile16
+
+view operation_num
+view ipc_num
+view checkpoint_num
+
+$replay_at_end = 0
+$replay_initialized = 0
+$in_coperation = 0
+$in_ioperation = 0
+$in_operation = 0
+
+clear
+
+print "COMMANDS:"
+print "  rgoto(#)  -- Replay operation granularity."
+print "  rigoto(#) -- IPC granularity (write / read)."
+print "  rlgoto(#) -- Log granularity. No buttons, line up with log numbers."
+print "  rcgoto(#) -- replay_checkpoint() granularity."
+print "  rpgoto(PegMessage) -- Go to the creation of the given peg message"
+print "  rpgoto_num(#) -- Go to the creation of the peg message with the given replaySourceID"
